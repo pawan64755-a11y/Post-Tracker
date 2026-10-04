@@ -90,9 +90,7 @@ function render(){
   +(c.raw>c.cap?'<div class="redl">🔴 रोज़ की लिमिट '+c.cap+' पार — '+(c.raw-c.cap)+' ज़्यादा (काउंटडाउन में नहीं जुड़ी)</div>':(c.raw==c.cap?'<div class="limok">रोज़ की लिमिट '+c.cap+' पूरी</div>':''))
   +'<div class="st"><span>आज का लक्ष्य: <b>'+c.quota+'</b></span><span>आज किया: <b>'+c.td+'</b></span><span>आज बाकी: <b>'+c.todayLeft+'</b></span><span>कुल बाकी: <b>'+c.rem+'</b></span></div>'
   +(c.late?'<div class="late">⚠️ डेडलाइन निकल गई — '+c.rem+' अभी भी पेंडिंग</div>':(c.rem==0?'<div class="st" style="margin-top:6px"><b>✅ पूरा हो गया</b></div>':'<div class="st" style="margin-top:6px">'+c.daysLeft+' दिन बचे</div>'))
-  +'<div class="st" style="margin-top:6px"><span>✔ पब्लिश्ड: <b>'+(c.all-(S.q[t.id]||0))+'</b></span><span>📅 शेड्यूल्ड (लाइव बाकी): <b>'+(S.q[t.id]||0)+'</b></span></div>'
-  +'<div class="acts"><button class="big" onclick="act(\''+t.id+'\',\'s\')">📅 शेड्यूल की</button><button class="big" onclick="act(\''+t.id+'\',\'p\')">✔ पब्लिश की</button></div>'
-  +'<div class="acts"><button class="g big" onclick="act(\''+t.id+'\',\'l\')">🟢 शेड्यूल्ड पोस्ट लाइव हुई</button><button class="g" onclick="undo(\''+t.id+'\')">↩</button></div></div>'});
+  +'<div class="acts"><button class="big" onclick="act(\''+t.id+'\',\'p\')">✔ पब्लिश की</button><button class="g" onclick="undo(\''+t.id+'\')">↩</button></div></div>'});
  h+='<h2>पेंडिंग / एक्स्ट्रा काम</h2><div class="card">';
  S.todos.forEach(function(x,i){h+='<div class="td'+(x.done?' d':'')+'"><input type="checkbox" '+(x.done?'checked':'')+' onchange="tg('+i+')"><span>'+esc(x.t)+'</span><button class="g" onclick="rm('+i+')">✕</button></div>'});
  if(!S.todos.length)h+='<div class="hist">कोई पेंडिंग काम नहीं। जो भी बाकी रखना हो यहाँ जोड़ें — पूरा होने तक रोज़ दिखेगा।</div>';
