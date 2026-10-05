@@ -45,9 +45,9 @@ h2{font-size:16px;margin:18px 0 8px}
 var KEY='postTrackerV1';
 var DEF={start:null,tasks:[
 {id:'en',name:'📝 English Blog',total:20,days:10},
-{id:'hi',name:'📝 हिंदी Blog',total:10,days:10},
-{id:'re',name:'🎬 Instagram Reels',total:10,days:10}],log:{},todos:[]};
-var S=load();S.q=S.q||{};S.hist=S.hist||[];S.todos=S.todos||[];S.tasks.forEach(function(t){if(!t.cap)t.cap=t.id=='en'?20:10});
+{id:'hi',name:'📝 हिंदी Blog',total:10,days:10}],log:{},todos:[]};
+function clean(o){o.tasks=(o.tasks||[]).filter(function(t){return t.id!='re'});if(o.q)delete o.q.re;for(var d in o.log)delete o.log[d].re;o.hist=(o.hist||[]).filter(function(h){return h.id!='re'});return o}
+var S=clean(load());S.q=S.q||{};S.hist=S.hist||[];S.todos=S.todos||[];S.tasks.forEach(function(t){if(!t.cap)t.cap=t.id=='en'?20:10});
 function load(){try{var r=localStorage.getItem(KEY);if(r)return JSON.parse(r)}catch(e){}return JSON.parse(JSON.stringify(DEF))}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 function ds(d){return d.toLocaleDateString('en-CA')}
@@ -75,7 +75,7 @@ function undo(id){for(var i=S.hist.length-1;i>=0;i--){var h=S.hist[i];if(h.id==i
 function bk(){var txt=JSON.stringify(S),name='post-tracker-backup-'+today()+'.json';
  function fb(){var a=document.createElement('a');a.href=URL.createObjectURL(new Blob([txt],{type:'application/json'}));a.download=name;document.body.appendChild(a);a.click();a.remove()}
  if(window.claude&&claude.use){claude.use('downloads').then(function(d){if(d)return d.save({filename:name,data:txt});fb()}).catch(function(){})}else fb()}
-function rt(el){var f=el.files[0];if(!f)return;var r=new FileReader();r.onload=function(){try{var o=JSON.parse(r.result);if(!o.tasks||!o.log)throw 0;if(!confirm('मौजूदा डेटा की जगह बैकअप लोड करें?'))return;S=o;S.q=S.q||{};S.hist=S.hist||[];S.todos=S.todos||[];save();render()}catch(e){alert('यह सही बैकअप फ़ाइल नहीं है')}};r.readAsText(f)}
+function rt(el){var f=el.files[0];if(!f)return;var r=new FileReader();r.onload=function(){try{var o=JSON.parse(r.result);if(!o.tasks||!o.log)throw 0;if(!confirm('मौजूदा डेटा की जगह बैकअप लोड करें?'))return;S=clean(o);S.q=S.q||{};S.hist=S.hist||[];S.todos=S.todos||[];save();render()}catch(e){alert('यह सही बैकअप फ़ाइल नहीं है')}};r.readAsText(f)}
 function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
 function render(){
  var h='',tot=0,pend=[],cs=S.tasks.map(function(t){var c=calc(t);tot+=c.todayLeft;if(c.todayLeft>0)pend.push(c.todayLeft+' '+t.name.replace(/^\S+\s/,''));return c});
@@ -85,12 +85,12 @@ function render(){
  if(tot==0&&openTodos.length==0)h+='<div class="ban ok">🎉 आज का सारा काम पूरा!<small>शानदार — कल फिर मिलते हैं।</small></div>';
  else h+='<div class="ban pend">आज बाकी: '+tot+' पोस्ट'+(openTodos.length?' + '+openTodos.length+' पेंडिंग काम':'')+'<small>'+esc(pend.join(' · '))+'</small></div>';
  S.tasks.forEach(function(t,i){var c=cs[i],p=Math.min(100,Math.round(c.all/t.total*100));
-  h+='<div class="card'+(c.raw>c.cap?' over':'')+'"><div class="row"><div class="t">'+esc(t.name)+'</div><div><b>'+c.all+'</b>/'+t.total+'</div></div>'
-  +'<div class="bar"><i style="width:'+p+'%"></i></div>'
-  +(c.raw>c.cap?'<div class="redl">🔴 रोज़ की लिमिट '+c.cap+' पार — '+(c.raw-c.cap)+' ज़्यादा (काउंटडाउन में नहीं जुड़ी)</div>':(c.raw==c.cap?'<div class="limok">रोज़ की लिमिट '+c.cap+' पूरी</div>':''))
-  +'<div class="st"><span>आज का लक्ष्य: <b>'+c.quota+'</b></span><span>आज किया: <b>'+c.td+'</b></span><span>आज बाकी: <b>'+c.todayLeft+'</b></span><span>कुल बाकी: <b>'+c.rem+'</b></span></div>'
+  h+='<div class="card'+(c.raw>c.cap?' over':'')+'"><div class="row"><div class="t">'+esc(t.name)+'</div><div><b>'+c.td+'</b>/'+c.cap+'</div></div>'
+  +'<div class="bar"><i style="width:'+Math.round(c.td/c.cap*100)+'%"></i></div>'
+  +(c.raw>=c.cap?'<div class="limok"><b>✅ आज की लिस्ट फुल ('+c.cap+'/'+c.cap+')</b> — कल नई लिस्ट ज़ीरो से शुरू होगी</div>':'')+(c.raw>c.cap?'<div class="redl">🔴 रोज़ की लिमिट '+c.cap+' पार — '+(c.raw-c.cap)+' ज़्यादा (काउंटडाउन में नहीं जुड़ी)</div>':'')
+  +'<div class="st"><span>चक्र: <b>'+c.all+'/'+t.total+'</b></span><span>आज का लक्ष्य: <b>'+c.quota+'</b></span><span>आज किया: <b>'+c.td+'</b></span><span>आज बाकी: <b>'+c.todayLeft+'</b></span><span>कुल बाकी: <b>'+c.rem+'</b></span></div>'
   +(c.late?'<div class="late">⚠️ डेडलाइन निकल गई — '+c.rem+' अभी भी पेंडिंग</div>':(c.rem==0?'<div class="st" style="margin-top:6px"><b>✅ पूरा हो गया</b></div>':'<div class="st" style="margin-top:6px">'+c.daysLeft+' दिन बचे</div>'))
-  +'<div class="acts"><button class="big" onclick="act(\''+t.id+'\',\'p\')">✔ पब्लिश की</button><button class="g" onclick="undo(\''+t.id+'\')">↩</button></div></div>'});
+  +'<div class="acts"><button class="big" onclick="act(\''+t.id+'\',\'p\')">'+(c.raw>=c.cap?'➕ और पोस्ट जोड़ें':'✔ पब्लिश की')+'</button><button class="g" onclick="undo(\''+t.id+'\')">↩</button></div></div>'});
  h+='<h2>पेंडिंग / एक्स्ट्रा काम</h2><div class="card">';
  S.todos.forEach(function(x,i){h+='<div class="td'+(x.done?' d':'')+'"><input type="checkbox" '+(x.done?'checked':'')+' onchange="tg('+i+')"><span>'+esc(x.t)+'</span><button class="g" onclick="rm('+i+')">✕</button></div>'});
  if(!S.todos.length)h+='<div class="hist">कोई पेंडिंग काम नहीं। जो भी बाकी रखना हो यहाँ जोड़ें — पूरा होने तक रोज़ दिखेगा।</div>';
@@ -111,6 +111,8 @@ function ad(){var v=document.getElementById('nt').value.trim();if(v){S.todos.pus
 function cf(i,k,v){v=parseInt(v);if(v>0){S.tasks[i][k]=v;save();render()}}
 function rs(){if(confirm('सारी गिनती रीसेट करें?')){S.log={};S.start=today();save();render()}}
 render();
+var cd=today();function chk(){if(today()!=cd){cd=today();render()}}
+setInterval(chk,30000);document.addEventListener('visibilitychange',chk);
 </script>
 </body>
 </html>
